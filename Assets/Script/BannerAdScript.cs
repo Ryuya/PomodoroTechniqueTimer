@@ -13,7 +13,6 @@ public class BannerAdScript : MonoBehaviour
     {
         Advertisement.Initialize(gameId, testMode);
         StartCoroutine(ShowBannerWhenReady());
-
     }
 
 

@@ -59,7 +59,7 @@ public class RewardedAdsScript : MonoBehaviour, IUnityAdsListener
         gameManager.state = State.DEFAULT;
         gameManager.workPanel.SetActive(false);
         gameManager.defaultPanel.SetActive(true);
-        gameManager.prevTime = gameManager.pomodoroTime * 60;
-        gameManager.c1.text = ("00:00");
+        gameManager.diffTime = gameManager.pomodoroTime * 60;
+        gameManager.prevewTimeText.text = ("00:00");
     }
 }
