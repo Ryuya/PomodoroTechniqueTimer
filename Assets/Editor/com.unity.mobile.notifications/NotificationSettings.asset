@@ -24,12 +24,12 @@ MonoBehaviour:
     - UnityUseLocationNotificationTrigger
     values:
     - True
-    - 7
-    - False
+    - -1
+    - True
     - False
     - -1
     - False
-    - False
+    - True
   AndroidNotificationEditorSettingsValues:
     keys:
     - UnityNotificationAndroidRescheduleOnDeviceRestart

@@ -13,6 +13,7 @@ public class BannerAdScript : MonoBehaviour
     {
         Advertisement.Initialize(gameId, testMode);
         StartCoroutine(ShowBannerWhenReady());
+        //ShowBannerWhenReady();
     }
 
 
@@ -25,4 +26,9 @@ public class BannerAdScript : MonoBehaviour
         Advertisement.Banner.SetPosition(BannerPosition.BOTTOM_CENTER);
         Advertisement.Banner.Show(placementId);
     }
+    //void ShowBannerWhenReady()
+    //{
+    //    Advertisement.Banner.SetPosition(BannerPosition.BOTTOM_CENTER);
+    //    Advertisement.Banner.Show(placementId);
+    //}
 }

@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Unity.Notifications.iOS;
+
 public enum State
 {
     DEFAULT = 0,
@@ -15,8 +17,10 @@ public enum State
 
 public class GameManager : MonoBehaviour
 {
+    iOSNotification notification;
     //順番に残り勤務時間、合計獲得金額、現在勤務時間
     public Text prevewTimeText, pomoText, c3, c4,pText,fText,diffText;
+    public int pomoCount = 0;
     public State state;
 
     public float diffTime, 経過時間, 現在休憩時間;
@@ -46,8 +50,17 @@ public class GameManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        //pausePanel.SetActive(false);
 
+        if (SaveData.Instance.SampleDict.ContainsKey(DateTime.Today.ToString()))
+        {
+            pomoCount = SaveData.Instance.SampleDict[DateTime.Today.ToString()];
+        }
+        else
+        {
+            SaveData.Instance.SampleDict.Add(DateTime.Today.ToString(), pomoCount);
+        }
+        Debug.Log(DateTime.Today.ToString());
+        //pausePanel.SetActive(false);
         Application.runInBackground = true;
         workPanel.SetActive(false);
         Application.targetFrameRate = 13;
@@ -101,6 +114,8 @@ public class GameManager : MonoBehaviour
                     switch (state)
                     {
                         case State.WORK:
+                            pomoCount++;
+                            pomoText.text = pomoCount.ToString();
                             this.setKyukei();
                             break;
                         case State.KYUKEI:
@@ -134,10 +149,9 @@ public class GameManager : MonoBehaviour
     public void SetPomorodo()
     {
         //prevTime = pomodoroTime * 60;
-        state = State.WORK;
         //prevTime = 25 * 60;
-        startDate = DateTime.Now;
         setWork();
+        startDate = DateTime.Now;
     }
 
     public void PauseButton()
@@ -173,10 +187,18 @@ public class GameManager : MonoBehaviour
         audioSource.Play();
         keikajikan = 0;
         diffTime = pomodoroTime;
+        //LocalNotificationWrapper.ReserveNotification("TEST","ポモドーロが完了しました！", pomodoroTime - (int)diffTime);
+        this.NotificationExample("TEST", "ポモドーロが完了しました！", Mathf.FloorToInt(pomodoroTime - keikajikan));
         defaultPanel.SetActive(false);
         workPanel.SetActive(true);
         audioSource.Play();
         state = State.WORK;
+        if (SaveData.Instance.SampleDict.ContainsKey(DateTime.Today.ToString()))
+        {
+            SaveData.Instance.SampleDict[DateTime.Today.ToString()] = pomoCount;
+            SaveData.Instance.Save();
+            Debug.Log(SaveData.Instance.SampleDict[DateTime.Today.ToString()]);
+        }
         cam.backgroundColor = new Color(0, 0.7411765f, 1, 0);
         startDate = DateTime.Now;
     }
@@ -185,6 +207,8 @@ public class GameManager : MonoBehaviour
         audioSource.clip = pauseClip;
         audioSource.Play();
         keikajikan = 0;
+        //LocalNotificationWrapper.ReserveNotification("TEST", "休憩が完了しました！", breakTime - (int)diffTime);
+        this.NotificationExample("TEST", "休憩が完了しました！", Mathf.FloorToInt(breakTime - keikajikan));
         diffTime = breakTime;
         state = State.KYUKEI;
         cam.backgroundColor = new Color(1, 0.3349057f, 0.4370091f, 0);
@@ -202,6 +226,14 @@ public class GameManager : MonoBehaviour
     {
         if (hasFocus)
         {
+            SaveData.Instance.Reload();
+           pomoCount = SaveData.Instance.SampleDict[DateTime.Today.ToString()];
+                pomoText.text = pomoCount.ToString();
+            if(notification != null)
+            {
+                iOSNotificationCenter.RemoveAllScheduledNotifications();
+            }
+
             focusDate = DateTime.Now;
             //pText.text = startDate.ToString();
             //fText.text = focusDate.ToString();
@@ -223,9 +255,41 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            if (state == State.WORK)
+            {
+                NotificationExample("TEST2", "ポモドーロが終了しました！", ((startDate.Millisecond / 1000) - (int)diffTime));
+            }
+            else if (state == State.KYUKEI)
+
+            {
+                NotificationExample("TEST2", "休憩が終了しました！", ((startDate.Millisecond / 1000) - (int)diffTime));
+            }
             //pauseDate = DateTime.;
             pauseDate = DateTime.Now;
             Debug.Log("OnApplicationPause:" + hasFocus);
         }
+    }
+
+    public void NotificationExample(string title,string body,int afterTime)
+    {
+        var timeTrigger = new iOSNotificationTimeIntervalTrigger()
+        {
+            TimeInterval = new TimeSpan(0, 0, afterTime),
+            Repeats = false
+        };
+        notification = new iOSNotification()
+        {
+            // You can optionally specify a custom Identifier which can later be 
+            // used to cancel the notification, if you don't set one, an unique 
+            // string will be generated automatically.
+            Identifier = "_notification_01",
+            Title = title,
+            Body = body,
+            Subtitle = "This is a subtitle, something, something important...",
+            CategoryIdentifier = "category_a",
+            ThreadIdentifier = "thread1",
+            Trigger = timeTrigger,
+        };
+        iOSNotificationCenter.ScheduleNotification(notification);
     }
 }
